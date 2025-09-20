@@ -1,18 +1,43 @@
 from pathlib import Path
 
-from omegaconf import OmegaConf
 import cv2
 import numpy as np
+from omegaconf import OmegaConf
 
 points = []
 
 flag = False
 
+
 def create_control_panel(cfg, window_name):
-    cv2.createTrackbar("alpha", window_name, cfg.alpha_range[0], cfg.alpha_range[1], update_color_jitter)
-    cv2.createTrackbar("beta", window_name, cfg.beta_range[1] * cfg.procent, cfg.beta_range[1] * cfg.procent, update_color_jitter)
-    cv2.createTrackbar("gamma", window_name, cfg.gamma_range[1] * cfg.procent, cfg.gamma_range[1] * cfg.procent, update_color_jitter)
-    cv2.createTrackbar("delta", window_name, cfg.delta_range[1] * cfg.procent, cfg.delta_range[1] * cfg.procent, update_color_jitter)
+    cv2.createTrackbar(
+        "alpha",
+        window_name,
+        cfg.alpha_range[0],
+        cfg.alpha_range[1],
+        update_color_jitter,
+    )
+    cv2.createTrackbar(
+        "beta",
+        window_name,
+        cfg.beta_range[1] * cfg.procent,
+        cfg.beta_range[1] * cfg.procent,
+        update_color_jitter,
+    )
+    cv2.createTrackbar(
+        "gamma",
+        window_name,
+        cfg.gamma_range[1] * cfg.procent,
+        cfg.gamma_range[1] * cfg.procent,
+        update_color_jitter,
+    )
+    cv2.createTrackbar(
+        "delta",
+        window_name,
+        cfg.delta_range[1] * cfg.procent,
+        cfg.delta_range[1] * cfg.procent,
+        update_color_jitter,
+    )
 
 
 def get_jitter_params(cfg, window_name):
@@ -71,6 +96,7 @@ def perspective_transform(image, height, width):
 
     return dst_img
 
+
 def hue_augmentation(cfg, image, alpha):
     if alpha == cfg.alpha_range[0]:
         return image
@@ -80,6 +106,7 @@ def hue_augmentation(cfg, image, alpha):
     hsv[:, :, 0] = np.remainder(hsv[:, :, 0] + alpha / 2, cfg.hue_board)
     img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
+
 
 def saturation_augmentation(cfg, image, beta):
     if beta == cfg.beta_range[1]:
@@ -91,6 +118,7 @@ def saturation_augmentation(cfg, image, beta):
     img = beta * img + (1 - beta) * Y
     return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
 
+
 def contrast_augmentation(cfg, image, gamma):
     if gamma == cfg.gamma_range[1]:
         return image
@@ -101,6 +129,7 @@ def contrast_augmentation(cfg, image, gamma):
     img = gamma * img + (1 - gamma) * mean
     return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
 
+
 def value_augmentation(cfg, image, delta):
     if delta == cfg.delta_range[1]:
         return image
@@ -108,6 +137,7 @@ def value_augmentation(cfg, image, delta):
     img = image.astype(np.float32) / cfg.color_size
     img = img * delta
     return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
+
 
 def color_jitter(cfg, image, alpha, beta, gamma, delta):
     img = hue_augmentation(cfg, image, alpha)
