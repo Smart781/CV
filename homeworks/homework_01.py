@@ -1,26 +1,25 @@
+from pathlib import Path
+
+from omegaconf import OmegaConf
 import cv2
 import numpy as np
 
 points = []
 
-color_jitter_params = {"alpha": 0, "beta": 100, "gamma": 100, "delta": 100}
-
 flag = False
 
-
-def create_control_panel():
-    cv2.namedWindow("Color Jitter")
-    cv2.createTrackbar("alpha", "Color Jitter", 0, 360, update_color_jitter)
-    cv2.createTrackbar("beta%", "Color Jitter", 100, 100, update_color_jitter)
-    cv2.createTrackbar("gamma%", "Color Jitter", 100, 100, update_color_jitter)
-    cv2.createTrackbar("delta%", "Color Jitter", 100, 100, update_color_jitter)
+def create_control_panel(cfg, window_name):
+    cv2.createTrackbar("alpha", window_name, cfg.alpha_range[0], cfg.alpha_range[1], update_color_jitter)
+    cv2.createTrackbar("beta", window_name, cfg.beta_range[1] * cfg.procent, cfg.beta_range[1] * cfg.procent, update_color_jitter)
+    cv2.createTrackbar("gamma", window_name, cfg.gamma_range[1] * cfg.procent, cfg.gamma_range[1] * cfg.procent, update_color_jitter)
+    cv2.createTrackbar("delta", window_name, cfg.delta_range[1] * cfg.procent, cfg.delta_range[1] * cfg.procent, update_color_jitter)
 
 
-def get_jitter_params():
-    alpha = cv2.getTrackbarPos("alpha", "Color Jitter")
-    beta = cv2.getTrackbarPos("beta%", "Color Jitter") / 100.0
-    gamma = cv2.getTrackbarPos("gamma%", "Color Jitter") / 100.0
-    delta = cv2.getTrackbarPos("delta%", "Color Jitter") / 100.0
+def get_jitter_params(cfg, window_name):
+    alpha = cv2.getTrackbarPos("alpha", window_name)
+    beta = cv2.getTrackbarPos("beta", window_name) / cfg.procent
+    gamma = cv2.getTrackbarPos("gamma", window_name) / cfg.procent
+    delta = cv2.getTrackbarPos("delta", window_name) / cfg.procent
     return alpha, beta, gamma, delta
 
 
@@ -39,28 +38,28 @@ def mouse_callback(event, x, y, flags, param):
         points.append([x, y])
 
 
-def draw_points(image):
+def draw_points(cfg, image, window_name):
     global points
     global flag
 
     for x, y in points:
-        cv2.circle(image, (x, y), 5, (0, 0, 0), -1)
+        cv2.circle(image, (x, y), cfg.radius, tuple(cfg.black), -1)
 
     if len(points) == 4:
         # if flag:
         #     create_control_panel()
         #     flag = False
 
-        image = square(image)
-        a, b, g, d = get_jitter_params()
-        augmented_img = color_jitter(image, alpha=a, beta=b, gamma=g, delta=d)
-        cv2.imshow("ColorJitter", augmented_img)
+        image = perspective_transform(image, cfg.height, cfg.width)
+        a, b, g, d = get_jitter_params(cfg, window_name)
+        augmented_img = color_jitter(cfg, image, alpha=a, beta=b, gamma=g, delta=d)
+        cv2.imshow(cfg.augmented_name, augmented_img)
 
 
-def square(image):
+def perspective_transform(image, height, width):
     src_pts = np.float32(points)
-    h = 360
-    w = 680
+    h = height
+    w = width
 
     dst_img = np.zeros((h, w, 3), dtype=np.uint8)
 
@@ -72,54 +71,76 @@ def square(image):
 
     return dst_img
 
+def hue_augmentation(cfg, image, alpha):
+    if alpha == cfg.alpha_range[0]:
+        return image
 
-def color_jitter(image, alpha=0, beta=1.0, gamma=1.0, delta=1.0):
-    img = image.astype(np.float32) / 255.0
+    img = image.astype(np.float32) / cfg.color_size
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hsv[:, :, 0] = np.remainder(hsv[:, :, 0] + alpha / 2, cfg.hue_board)
+    img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
 
-    if alpha != 0:
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        hsv[:, :, 0] = (hsv[:, :, 0] + alpha) % 360
-        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+def saturation_augmentation(cfg, image, beta):
+    if beta == cfg.beta_range[1]:
+        return image
 
-    if beta != 1.0:
-        Y = 0.299 * img[:, :, 2] + 0.587 * img[:, :, 1] + 0.114 * img[:, :, 0]
-        Y = np.stack([Y, Y, Y], axis=-1)
-        img = beta * img + (1 - beta) * Y
+    img = image.astype(np.float32) / cfg.color_size
+    Y = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    Y = np.stack([Y, Y, Y], axis=-1)
+    img = beta * img + (1 - beta) * Y
+    return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
 
-    if gamma != 1.0:
-        Y = 0.299 * img[:, :, 2] + 0.587 * img[:, :, 1] + 0.114 * img[:, :, 0]
-        mean = np.mean(Y, axis=(0, 1), keepdims=True)
-        img = gamma * img + (1 - gamma) * mean
+def contrast_augmentation(cfg, image, gamma):
+    if gamma == cfg.gamma_range[1]:
+        return image
 
-    if delta != 1.0:
-        img = img * delta
+    img = image.astype(np.float32) / cfg.color_size
+    Y = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    mean = np.mean(Y, axis=(0, 1), keepdims=True)
+    img = gamma * img + (1 - gamma) * mean
+    return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
 
-    return np.clip(img * 255, 0, 255).astype(np.uint8)
+def value_augmentation(cfg, image, delta):
+    if delta == cfg.delta_range[1]:
+        return image
+
+    img = image.astype(np.float32) / cfg.color_size
+    img = img * delta
+    return np.clip(img * cfg.color_size, 0, cfg.color_size).astype(np.uint8)
+
+def color_jitter(cfg, image, alpha, beta, gamma, delta):
+    img = hue_augmentation(cfg, image, alpha)
+    img = saturation_augmentation(cfg, img, beta)
+    img = contrast_augmentation(cfg, img, gamma)
+    img = value_augmentation(cfg, img, delta)
+
+    return img
 
 
-def main():
+def main(cfg):
     global points
 
-    window_name = "Image"
+    window_name = cfg.window_name
     video = cv2.VideoCapture(0)
 
     cv2.namedWindow(window_name)
     cv2.setMouseCallback(window_name, mouse_callback)
 
-    create_control_panel()
+    create_control_panel(cfg, window_name)
 
     while True:
         ret, image = video.read()
         if not ret:
             break
 
-        draw_points(image)
+        draw_points(cfg, image, window_name)
         cv2.imshow(window_name, image)
 
         if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
             break
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        if cv2.waitKey(cfg.delay) & 0xFF == ord(cfg.symbol):
             break
 
     video.release()
@@ -127,4 +148,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    task = Path(__file__).stem
+    cfg = OmegaConf.load("../params.yaml")[task]
+
+    main(cfg)
