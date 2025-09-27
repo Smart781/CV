@@ -1,9 +1,9 @@
 homework_00:
-  image: data/cherubino.jpg   # путь к изображению
-  point: [300, 500]           # x, y координаты точки
-  color: [255, 0, 0]          # RGB цвет точки
-  radius: 50                  # размеры точки
-
+  image: data/cherubino.jpg   
+  point: [300, 500]           
+  color: [255, 0, 0]          
+  radius: 50                  
+  
 homework_01:
   delay: 30
   symbol: "q"
@@ -20,3 +20,14 @@ homework_01:
   beta_range: [0, 1]
   gamma_range: [0, 1]
   delta_range: [0, 1]
+
+homework_02:
+  image: ../data/saturn_rings.png
+  delay: 30
+  symbol: "q"
+  procent: 100
+  color_size: 255
+  window_name: "Image"
+  spectr_name: "Spectr"
+  height_range: [0, 1]
+  width_range: [0, 1]
