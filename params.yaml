@@ -1,0 +1,22 @@
+homework_00:
+  image: data/cherubino.jpg   # путь к изображению
+  point: [300, 500]           # x, y координаты точки
+  color: [255, 0, 0]          # RGB цвет точки
+  radius: 50                  # размеры точки
+
+homework_01:
+  delay: 30
+  symbol: "q"
+  radius: 5
+  black: [0, 0, 0]
+  height: 360
+  width: 680
+  procent: 100
+  color_size: 255
+  hue_board: 180
+  window_name: "Image"
+  augmented_name: "ColorJitter"
+  alpha_range: [0, 360]
+  beta_range: [0, 1]
+  gamma_range: [0, 1]
+  delta_range: [0, 1]
