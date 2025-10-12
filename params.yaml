@@ -31,3 +31,10 @@ homework_02:
   spectr_name: "Spectr"
   height_range: [0, 1]
   width_range: [0, 1]
+
+homework_03:
+  input_image_path: ../data/puppy.png
+  output_image_path: ../data/output.png
+  opencv_output_image_path: ../data/cv_output.png
+  sigma_space: 15
+  sigma_color: 15
