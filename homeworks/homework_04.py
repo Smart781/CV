@@ -107,10 +107,10 @@ def marr_hildreth_ransac_results(cfg):
 
     marhil_edges = calc_marr_hildreth_edges(cfg, log_img, threshold)
 
-    L, best_inliers = compute_line_si(cfg, marhil_edges)
+    line, best_inliers = compute_line_si(cfg, marhil_edges)
 
     dst_image = cv2.cvtColor(f, cv2.COLOR_GRAY2RGB)
-    a, b, c = L
+    a, b, c = line
     h, w = f.shape
 
     if b == 0:
