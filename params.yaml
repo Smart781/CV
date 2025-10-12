@@ -38,3 +38,21 @@ homework_03:
   opencv_output_image_path: ../data/cv_output.png
   sigma_space: 15
   sigma_color: 15
+
+homework_04:
+  # Input image
+  input_image: ../data/building.png
+  # Marr-Hildreth edge detection
+  sigma: 3.5 
+  thresh_percent: 0.2 # T = thresh_percent * LoG.max()
+  # RANSAC
+  threshold: 5
+  max_trials: 5000
+  seed: 0xC0FFEE
+  # Output images
+  output_image: ../data/line_ransac.jpg
+  output_edges: ../data/marr_hildreth_edges.jpg
+  color_size: 255
+  color: [255, 0, 255]
+  radius: 2
+  line_thickness: 3
