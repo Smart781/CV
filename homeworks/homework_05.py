@@ -155,7 +155,7 @@ class SuperPointNet(nn.Module):
         return out, out_inds
 
 
-def square_matrix(cfg, image1, image2):
+def desc_distances(cfg, image1, image2):
     superpoint_weights = cfg.superpoint_weights
 
     net = SuperPointNet()
@@ -179,7 +179,7 @@ def Cross_Check_Matching(cfg, D, image1, image2, pts1, pts2):
     dist_2_1 = D[np.arange(D.shape[0]), match_2_1]
 
     indices = np.arange(D.shape[0])
-    mask = (match_1_2[match_2_1] == indices) & (dist_2_1 < T)
+    mask = (match_1_2[match_2_1] == indices) & (np.sqrt(dist_2_1) < T)
 
     ind1 = match_2_1[mask]
     ind2 = indices[mask]
@@ -216,7 +216,7 @@ def Cross_Check_Matching(cfg, D, image1, image2, pts1, pts2):
 def main(cfg):
     image1 = cv2.imread(cfg.input_image_1)
     image2 = cv2.imread(cfg.input_image_2)
-    D, pts1, pts2 = square_matrix(cfg, image1, image2)
+    D, pts1, pts2 = desc_distances(cfg, image1, image2)
 
     Cross_Check_Matching(cfg, D, image1, image2, pts1, pts2)
 
