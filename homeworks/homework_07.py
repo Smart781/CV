@@ -2,7 +2,7 @@ import numpy as np
 
 
 def transform_points(points1, R, t):
-    points2 = (points1 - t) @ R.T
+    points2 = (points1 - t) @ R
     return points2
 
 
