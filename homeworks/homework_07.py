@@ -2,8 +2,8 @@ import numpy as np
 
 
 def transform_points(points1, R, t):
-    points2 = (points1 - t) @ R
-    return points2
+    points2 = R.T @ (points1 - t).T
+    return points2.T
 
 
 def rotation_matrix_from_rotvec(omega):
