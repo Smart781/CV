@@ -33,6 +33,9 @@ def solvePnP_DLT(points3D, points2D, K):
     U_r, S_r, V_r = np.linalg.svd(R)
     R_ort = U_r @ V_r
 
+    scale = np.mean(S_r)
+    t /= scale
+
     if np.linalg.det(R_ort) < 0:
         R_ort = -R_ort
         t = -t
